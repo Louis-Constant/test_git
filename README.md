@@ -1,19 +1,29 @@
 # coopgui
 
-coopgui is a php graphics library which generates HTML, CSS and JavaScript. Coopgui reduces the use of Javascript for security reasons (__oui mais comment ?__).
+coopgui is a php graphics library which allows you to build the front end part of your website very precisely by generating HTML, CSS and JavaScript. __(?)est-ce qu'il faut dire que coopgui génère l'HTML à chaque fois qu'une requete est envoyé (/?)__ Coopgui reduces the use of Javascript for security reasons. __(?)oui mais comment elle réduit ? en utilisant le JS que pour la partie graphique ? (=boutons et le responsive design ?) (/?)__
 
 
 ## Getting Started
 
 ### Prerequisites
-__a server with php7 ?__
+__(?)a server with php7 ? (/?)__
 
 ### Basic Installation
-Copy everything on your server.
+Copy everything on your server. To  and make sure that the index.php file is 
 
-
+### coopgui arborescence
 
 ### Plugins
+coopgui generates a website by using plugins 
+
+### How coopgui works
+When a web browser sends a request, the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed . This file will call each plugins.
+### How to create a website
+To create a website you need to slice it in several plugins. Each plugin represents a part of the site. The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file   in the site folder coopgui allows you to create plugins in the plugin folder. The site folder  
+### Example site
+
+
+
 
 Oh My Zsh comes with a shit load of plugins to take advantage of. You can take a look in the [plugins](https://github.com/robbyrussell/oh-my-zsh/tree/master/plugins) directory and/or the [wiki](https://github.com/robbyrussell/oh-my-zsh/wiki/Plugins) to see what's currently available.
 
