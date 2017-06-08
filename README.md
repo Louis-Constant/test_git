@@ -1,29 +1,46 @@
-# coopgui
+# Coopgui
 
-coopgui is a php graphics library which allows you to build the front end part of your website very precisely by generating HTML, CSS and JavaScript. __(?)est-ce qu'il faut dire que coopgui génère l'HTML à chaque fois qu'une requete est envoyé (/?)__ Coopgui reduces the use of Javascript for security reasons. __(?)oui mais comment elle réduit ? en utilisant le JS que pour la partie graphique ? (=boutons et le responsive design ?) (/?)__
+Coopgui is a php graphics library which allows you to build the front end part of your website very precisely by generating HTML, CSS and JavaScript. __(?)est-ce qu'il faut dire que coopgui génère l'HTML à chaque fois qu'une requete est envoyé (/?)__ Coopgui reduces the use of Javascript for security reasons. __(?)oui mais comment elle réduit ? en utilisant le JS que pour la partie graphique ? (=boutons et le responsive design ?) (/?)__
 
-
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 __(?)a server with php7 ? (/?)__
 
-### Basic Installation
-Copy everything on your server. To  and make sure that the index.php file is 
+## Basic Installation
+Copy everything on your server. __(?)Faut-il préciser que pour générer le site il faut exécuter index.php ?(/?)__
 
-### coopgui arborescence
+## coopgui arborescence
 
-### Plugins
-coopgui generates a website by using plugins 
+## How coopgui works
 
-### How coopgui works
-When a web browser sends a request, the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed . This file will call each plugins.
+### HTML generation overview
+Coopgui generates the HTML of a web page by calling some of the plugins located in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. When a web browser sends a request, the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed. This file successively calls all the plugins it needs and pass them options. Each plugin returns a string containing HTML to the index.php file which then appends everything into an array. Eventually the array is sent using echo. (dernière phrase à reformuler)  
+
+## Index.php
+
+## Plugins
+For coopgui to generate a web page you have to write plugins. A plugin represents a part of the page. For example a clock could be a plugin. The plugins must be inside the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory and contain a PHP file for the HTML generation, a PHP file for the CSS generation and a JavaScript file for the JavaScript generation.
+
+### How to create a Plugin
+Create a This file have to define a php class with the name of the plugin. This class must inherit from the IrHtmlFather class which is located in the [system/Html](https://github.com/coopattitude/coopgui/tree/master/system/Html) directory.
+
+#### How to create a Plugin
+-Create a folder with the plugin name in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. For example the IrHtmlInfo
+-Inside the plugin folder, create a php file with the plugin name. For example "IrHtmlInfo.php"   
+A plugin must contain a php file which must contains 
+
+
+# Autoloader
+
+#### CSS Generation
+
 ### How to create a website
-To create a website you need to slice it in several plugins. Each plugin represents a part of the site. The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file   in the site folder coopgui allows you to create plugins in the plugin folder. The site folder  
+To create a website you need to slice it in several plugins. Plus exactement. You have to glue plugins together, to nest them Each plugin represents a part of the site. The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file   in the site folder coopgui allows you to create plugins in the plugin folder. The site folder  
 ### Example site
 
 
+## CSS
 
+## JavaScript
 
 Oh My Zsh comes with a shit load of plugins to take advantage of. You can take a look in the [plugins](https://github.com/robbyrussell/oh-my-zsh/tree/master/plugins) directory and/or the [wiki](https://github.com/robbyrussell/oh-my-zsh/wiki/Plugins) to see what's currently available.
 
