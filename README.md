@@ -6,35 +6,183 @@ Coopgui is a php graphics library which allows you to build the front end part o
 __(?)a server with php7 ? (/?)__
 
 ## Basic Installation
-Copy everything on your server. __(?)Faut-il préciser que pour générer le site il faut exécuter index.php ?(/?)__
+* Copy everything on your server. __(?)Faut-il préciser que pour générer le site il faut exécuter index.php ?(/?)__
+* Make sure all requests are directed to the [index.php](https://github.com/coopattitude/coopgui/blob/master/index.php) file by your web server configuration.
 
-## coopgui arborescence
+## coopgui arborescence (__à reformuler__)
+this library works like this: to build a website the user creates daughter classes in site and plugins. This classes inherit from the classes inside the system folder. 
+
+system : the classes that the user can reuse (=create a daughter class)
+
 
 ## How coopgui works
 
 ### HTML generation overview
-Coopgui generates the HTML of a web page by calling some of the plugins located in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. When a web browser sends a request, the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed. This file successively calls all the plugins it needs and pass them options. Each plugin returns a string containing HTML to the index.php file which then appends everything into an array. Eventually the array is sent using echo. (dernière phrase à reformuler)  
+Coopgui generates the HTML of a web page by calling some of the plugins located in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. When a web browser sends a request, the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed. This file successively calls all the plugins it needs and pass them options. Each plugin returns a string containing HTML to the index.php file which then appends everything into an array. Eventually the array is sent using echo. __(dernière phrase à reformuler)__  
 
-## Index.php
+## site/index.php
+The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file is the main file of the site.
+It defines the class `IrIndex` and immediately creates an IrIndex object (and then calls his init method). __(?)Parler du constructeur et de envcustom, gencss etc ?(/?)__
+This IrIndex object will __(utiliser le present ?)__ echo the HTML of the web page. The head method generates the head and the init method generates the body. 
+
+IrIndex echos the HTML only at the end. This avoids sending half the page when an error occurs. In order to do that you have to append all the HTML strings in one array. This array is the Irindex propertie `display` and is echoed at the end of the init method.
+
+### head method
+In the `head` method you can append everything you want to be in the head tag : meta tags, title tags, etc. You can also append link and script tags to include the stylesheets and the JavaScript files you want. __(?)Dire que Jquery est ds la bibliothèque et que on peut l'inclure si on veut?(/?)__ __(?)Dire que on peut inclure une police ? La police Roboto ?(/?)__
+
+You (also ?) have to call the `initCss` method on the IrIndex propertie `irGenCss` and append the result into `display` like this :
+```php
+$linkCss = $this->irGenCss->initCss () ;
+$this->display [] = $linkCss ;
+```
+This gathers the css of all the plugins in one file and returns a link tag with the path to this file. 
+
+Do the same with the `initJs` method on the IrIndex propertie `irGenJs`. This gathers all the JavaScript file inside the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) and the js [folder](https://github.com/coopattitude/coopgui/tree/master/js) into one file and returns a script tag that imports it.
+
+
+### init method
+In the `init` method you can append everything you want to go in the body tag. Instantiate all the plugin objects you need to build your web page. Call their `toHtml` method on them and append the result in `display`. For example for the Info plugin :
+
+```php
+$irHtmlInfo = new \IrHtmlInfo ($this->irCommander, $this->irGenCss) ;
+$this->display [] = $irHtmlInfo->toHtml () ;
+```
+
+__(?)mettre une remarque sur l'ordre d'ajout dans display ? Vu que cela peut modifier la façon dont les éléments s'affichent(/?)__
 
 ## Plugins
-For coopgui to generate a web page you have to write plugins. A plugin represents a part of the page. For example a clock could be a plugin. The plugins must be inside the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory and contain a PHP file for the HTML generation, a PHP file for the CSS generation and a JavaScript file for the JavaScript generation.
-
-### How to create a Plugin
-Create a This file have to define a php class with the name of the plugin. This class must inherit from the IrHtmlFather class which is located in the [system/Html](https://github.com/coopattitude/coopgui/tree/master/system/Html) directory.
+For coopgui to generate a web page you have to write plugins. A plugin represents a part of the page. For example a clock could be a plugin. The plugins must be inside the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory and contain a PHP file for the HTML generation, a PHP file for the CSS generation and a JavaScript file that contains the code related to the plugin. __(?)encore une fois : est-ce que ce doit être uniquement du JS pour gérer le graphique de manière à être moins attaquable ? Si oui faut-il préciser à l'utilisateur de ne mettre que du JS graphique ?(/?)__
 
 #### How to create a Plugin
--Create a folder with the plugin name in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. For example the IrHtmlInfo
--Inside the plugin folder, create a php file with the plugin name. For example "IrHtmlInfo.php"   
-A plugin must contain a php file which must contains 
+Create a folder with the plugin name in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory.
+##### HTML generation
+The plugin's HTML is generated by a PHP class. Below is how to create one. 
+* Inside the plugin folder, create a php file with the plugin name. For example "IrHtmlInfo.php" for the info plugin.
+* Inside this file, define a php class with the same name as the file (the file and the class must have the same name for the autoloader/classloader to work correctly). This class must inherit from the IrHtmlFather class which is located in the [system/Html](https://github.com/coopattitude/coopgui/tree/master/system/Html) directory.
+* __(?)redefine the constructor ? (/?)__
+* Create a method "toHtml". This is the method which will return the HTML of the plugin.
+* Inside this method, create an array called "$htmlDef". __(?)Expliquer le unset ?(/?)__ Fill it with strings that represents the HTML tags you want to return. For example in IrHtmlInfo.php :
 
+  __(?)faire une colonne example à droite ? genre tableau(/?)__
 
-# Autoloader
+  ```php
+  unset ($htmlDef) ;
+		
+  $htmlDef [] = '<div[htmlInfoBox]>' ;
+
+    $htmlDef [] = '<div[htmlInfoBoxLeft]>' ;
+      $htmlDef [] = '<div[htmlInfoBoxLeftImg]></div>' ;
+    $htmlDef [] = '</div>' ;
+
+    $htmlDef [] = '<div[htmlInfoBoxRight]>' ;
+
+      $htmlDef [] = '<div[htmlInfoBoxRightTop]>' ;
+
+        $htmlDef [] = '<div[htmlInfoBoxRightTopTitle]></div>' ;
+        $htmlDef [] = '<div[htmlInfoBoxRightTopTop]></div>' ;
+        $htmlDef [] = '<div[htmlInfoBoxRightTopMiddle]></div>' ;
+        $htmlDef [] = '<div[htmlInfoBoxRightTopBottom]></div>' ;
+
+      $htmlDef [] = '</div>' ;
+
+    $htmlDef [] = '</div>' ;
+
+  $htmlDef [] = '</div>' ;
+  ```
+
+  The strings inside the square brackets are flags you give to the tags in order to retrieve them later in the code.
+
+* Create an IrHtmlDef object and pass it the htmlDef array. For example in IrHtmlInfo.php :
+  ```php
+  $irHtmlDef = new \IrHtmlDef ($this->irCommander, $this->getIrGenCss (), $htmlDef) ;
+  ```
+
+  This [irHtmlDef](https://github.com/coopattitude/coopgui/blob/master/system/Lib/IrHtmlDef.php) object will scan $htmlDef, find the tags and create one [IrHtmlTag](https://github.com/coopattitude/coopgui/blob/master/system/Lib/IrHtmlTag.php) object per tag. 
+
+* Modifiy each tag as you want. First retrieve the wanted tag using his flag and the get method of the irHtmlDef object like this :
+
+  ```php
+  $irHtmlTag = $irHtmlDef->get ('htmlInfoBox') ;
+  ```
+ Then you can modifiy this specific tag using IrHtmlTag methods. For example you can give it a class, an id and a content :
+
+  ```php
+  $irHtmlTag->setClass ('htmlInfoBox') ;
+  $irHtmlTag->setId ('htmlInfoBox_'.$this->getPrefixUniq ()) ;
+  $irHtmlTag->appendContent('blah blah blah');
+  ```
+  In this case the class is the same as the flag but it is a coincidence. The flag is just a label to retrieve the tag. 
+  
+* At the end of the toHtml() method, return what the toHtml method of the IrHtmlDef object return like this :
+  ```php
+  return $irHtmlDef->toHtml ()
+  ```
+the toHtml method of the IrHtmlDef object scans all the tags objects and there attributs and return the $htmlDef array
+the toHtml method of the IrHtmlDef object returns the content of the $htmlDef array after inserting into it
+ne pas oublier d'ajouter le nouveaux plugin au classloader
+
+(__A finir__)
+
+##### CSS generation
+The plugin's CSS is generated by a PHP class. Below is how to create one.
+This class have to generate CSS that applies on the tags definied above in the HTML generation class
+
+Dire que on peut mettre dans un dossier CSS ?
+
+* Inside the plugin folder, create a folder called "css" and then inside a php file. To name this php file, concatenate "IrCss_" with the plugin name. For example "IrCSS_HtmlInfo.php" for the info plugin. This "IrCss_" is very important as it indicates to [IrLibGenCss](https://github.com/coopattitude/coopgui/blob/master/system/Lib/IrLibGenCss.php) which files to collect for the CSS generation. That's why you can also put the php file directly is optional to put You can create the php file directly in the plugin or put it in a file called css
+* Inside this file, define a php class with the same name as the file. This class must inherit from the IrCSSFather class which is located in the [system/Css](https://github.com/coopattitude/coopgui/tree/master/system/Css) directory.
+* __(?)redefine the constructor ? (/?)__
+
+Unlike the HTML generation file, this class doesn't need to be added to the autoloader functions/Classes __(?)(which one should I choose ?)(/?)__ because it is included manually in .
+
+##### JavaScript generation
+Dire que on peut mettre dans un dossier JS ?
+
+# prefixUniq
+# ClassLoader
+Coopgui containes two classloader classes : [IrGuiClassLoader](https://github.com/coopattitude/coopgui/blob/master/system/ClassLoader/IrGUIClassLoader.php) and [ClassLoader](https://github.com/coopattitude/coopgui/blob/master/site/ClassLoader.php). These classes allows you to use all the other classes whithout having to include them in each file. The first class takes care of the classes inside [system](https://github.com/coopattitude/coopgui/tree/master/system) and [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins). The second class takes care of the classes inside [site](https://github.com/coopattitude/coopgui/tree/master/site). 
+The classloader classes are themselves included at the beginning of the [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file
+
+## How to add a class to a classloader class
+Each time you create a new plugin or a new class inside [site](https://github.com/coopattitude/coopgui/tree/master/site) you have to add the class to the correct classloader class.
+For example let's assume you created a plugin called "MyPlugin" with a IrMyplugin.php file in it (which itself defines the IrMyPlugin class) : 
+* Open [IrGuiClassLoader.php](https://github.com/coopattitude/coopgui/blob/master/system/ClassLoader/IrGUIClassLoader.php) 
+* Inside the loader method find the switch statement that looks like this :
+  ```php
+  switch ($className) {
+
+    case 'IrContainer' :
+    case 'IrHtmlAtt' :
+    case 'IrHtmlDef' :
+    case 'IrHtmlTag' :
+    case 'IrLibEnvCustom' :
+    case 'IrLibGenCss' :
+    case 'IrLibGenJs' :
+      $filePath = 'system/Lib/'.$className.'.php' ;
+      break ;
+
+    .
+    .
+    .
+
+    case 'IrHtmlInfo' :
+      $filePath = 'plugins/Info/'.$className.'.php' ;
+      break ;
+  ```
+* Add a case for when $className contains "IrMyPlugin" like this :
+  ```php
+    case 'IrMyPlugin' :
+      $filePath = 'plugins/MyPlugin/'.$className.'.php' ;
+      break ;
+  ```
+  
+The process is the same with the [ClassLoader](https://github.com/coopattitude/coopgui/blob/master/site/ClassLoader.php) class.
 
 #### CSS Generation
 
 ### How to create a website
 To create a website you need to slice it in several plugins. Plus exactement. You have to glue plugins together, to nest them Each plugin represents a part of the site. The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file   in the site folder coopgui allows you to create plugins in the plugin folder. The site folder  
+
 ### Example site
 
 
@@ -42,186 +190,23 @@ To create a website you need to slice it in several plugins. Plus exactement. Yo
 
 ## JavaScript
 
-Oh My Zsh comes with a shit load of plugins to take advantage of. You can take a look in the [plugins](https://github.com/robbyrussell/oh-my-zsh/tree/master/plugins) directory and/or the [wiki](https://github.com/robbyrussell/oh-my-zsh/wiki/Plugins) to see what's currently available.
 
-#### Enabling Plugins
 
-Once you spot a plugin (or several) that you'd like to use with Oh My Zsh, you'll need to enable them in the `.zshrc` file. You'll find the zshrc file in your `$HOME` directory. Open it with your favorite text editor and you'll see a spot to list all the plugins you want to load.
 
-For example, this line might begin to look like this:
 
-```shell
-plugins=(git bundler osx rake ruby)
-```
 
-#### Using Plugins
 
-Most plugins (should! we're working on this) include a __README__, which documents how to use them.
 
-### Themes
 
-We'll admit it. Early in the Oh My Zsh world, we may have gotten a bit too theme happy. We have over one hundred themes now bundled. Most of them have [screenshots](https://wiki.github.com/robbyrussell/oh-my-zsh/themes) on the wiki. Check them out!
 
-#### Selecting a Theme
 
-_Robby's theme is the default one. It's not the fanciest one. It's not the simplest one. It's just the right one (for him)._
 
-Once you find a theme that you want to use, you will need to edit the `~/.zshrc` file. You'll see an environment variable (all caps) in there that looks like:
 
-```shell
-ZSH_THEME="robbyrussell"
-```
 
-To use a different theme, simply change the value to match the name of your desired theme. For example:
 
-```shell
-ZSH_THEME="agnoster" # (this is one of the fancy ones)
-# you might need to install a special Powerline font on your console's host for this to work
-# see https://github.com/robbyrussell/oh-my-zsh/wiki/Themes#agnoster
-```
-
-Open up a new terminal window and your prompt should look something like this:
-
-![Agnoster theme](https://cloud.githubusercontent.com/assets/2618447/6316862/70f58fb6-ba03-11e4-82c9-c083bf9a6574.png)
-
-In case you did not find a suitable theme for your needs, please have a look at the wiki for [more of them](https://github.com/robbyrussell/oh-my-zsh/wiki/External-themes).
-
-If you're feeling feisty, you can let the computer select one randomly for you each time you open a new terminal window.
-
-
-```shell
-ZSH_THEME="random" # (...please let it be pie... please be some pie..)
-```
-
-
-## Advanced Topics
-
-If you're the type that likes to get their hands dirty, these sections might resonate.
-
-### Advanced Installation
-
-Some users may want to change the default path, or manually install Oh My Zsh.
-
-#### Custom Directory
-
-The default location is `~/.oh-my-zsh` (hidden in your home directory)
-
-If you'd like to change the install directory with the `ZSH` environment variable, either by running `export ZSH=/your/path` before installing, or by setting it before the end of the install pipeline like this:
-
-```shell
-export ZSH="$HOME/.dotfiles/oh-my-zsh"; sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-```
-
-#### Manual Installation
-
-##### 1. Clone the repository:
-
-```shell
-git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
-```
-
-##### 2. *Optionally*, backup your existing `~/.zshrc` file:
-
-```shell
-cp ~/.zshrc ~/.zshrc.orig
-```
-
-##### 3. Create a new zsh configuration file
-
-You can create a new zsh config file by copying the template that we have included for you.
-
-```shell
-cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
-```
-
-##### 4. Change your default shell
-
-```shell
-chsh -s /bin/zsh
-```
-
-##### 5. Initialize your new zsh configuration
-
-Once you open up a new terminal window, it should load zsh with Oh My Zsh's configuration.
-
-### Installation Problems
-
-If you have any hiccups installing, here are a few common fixes.
-
-* You _might_ need to modify your `PATH` in `~/.zshrc` if you're not able to find some commands after switching to `oh-my-zsh`.
-* If you installed manually or changed the install location, check the `ZSH` environment variable in `~/.zshrc`.
-
-### Custom Plugins and Themes
-
-If you want to override any of the default behaviors, just add a new file (ending in `.zsh`) in the `custom/` directory.
-
-If you have many functions that go well together, you can put them as a `XYZ.plugin.zsh` file in the `custom/plugins/` directory and then enable this plugin.
-
-If you would like to override the functionality of a plugin distributed with Oh My Zsh, create a plugin of the same name in the `custom/plugins/` directory and it will be loaded instead of the one in `plugins/`.
-
-## Getting Updates
-
-By default, you will be prompted to check for upgrades every few weeks. If you would like `oh-my-zsh` to automatically upgrade itself without prompting you, set the following in your `~/.zshrc`:
-
-```shell
-DISABLE_UPDATE_PROMPT=true
-```
-
-To disable automatic upgrades, set the following in your `~/.zshrc`:
-
-```shell
-DISABLE_AUTO_UPDATE=true
-```
-
-### Manual Updates
-
-If you'd like to upgrade at any point in time (maybe someone just released a new plugin and you don't want to wait a week?) you just need to run:
-
-```shell
-upgrade_oh_my_zsh
-```
-
-Magic!
-
-## Uninstalling Oh My Zsh
-
-Oh My Zsh isn't for everyone. We'll miss you, but we want to make this an easy breakup.
-
-If you want to uninstall `oh-my-zsh`, just run `uninstall_oh_my_zsh` from the command-line. It will remove itself and revert your previous `bash` or `zsh` configuration.
-
-## Contributing
-
-I'm far from being a [Zsh](http://www.zsh.org/) expert and suspect there are many ways to improve – if you have ideas on how to make the configuration easier to maintain (and faster), don't hesitate to fork and send pull requests!
-
-We also need people to test out pull-requests. So take a look through [the open issues](https://github.com/robbyrussell/oh-my-zsh/issues) and help where you can.
-
-### Do NOT send us themes
-
-We have (more than) enough themes for the time being. Please add your theme to the [external themes](https://github.com/robbyrussell/oh-my-zsh/wiki/External-themes) wiki page.
-
-## Contributors
-
-Oh My Zsh has a vibrant community of happy users and delightful contributors. Without all the time and help from our contributors, it wouldn't be so awesome.
-
-Thank you so much!
-
-## Follow Us
-
-We're on the social media.
-
-* [@ohmyzsh](https://twitter.com/ohmyzsh) on Twitter. You should follow it.
-* [Oh My Zsh](https://www.facebook.com/Oh-My-Zsh-296616263819290/) on Facebook.
-
-## Merchandise
-
-We have [stickers](http://shop.planetargon.com/products/ohmyzsh-stickers-set-of-3-stickers) and [shirts](http://shop.planetargon.com/products/ohmyzsh-t-shirts) for you to show off your love of Oh My Zsh. Again, this will help you become the talk of the town!
 
 ## License
 
-Oh My Zsh is released under the [MIT license](LICENSE.txt).
+Coopgui is released under the [MIT license](https://github.com/coopattitude/coopgui/blob/master/LICENSE).
 
-## About Planet Argon
 
-![Planet Argon](http://pa-github-assets.s3.amazonaws.com/PARGON_logo_digital_COL-small.jpg)
-
-Oh My Zsh was started by the team at [Planet Argon](https://www.planetargon.com/?utm_source=github), a [Ruby on Rails development agency](https://www.planetargon.com/skills/ruby-on-rails-development?utm_source=github).
